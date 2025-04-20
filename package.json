@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "playwright": "^1.49.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^22.10.2",
+    "allure-playwright": "^3.2.1"
+  },
+  "scripts": {
+    "main": "npx playwright test 01_E2E/main.spec.js",
+    "completeScenario": "npx playwright test tests/completeScenario.spec.js"
+  }
+}
