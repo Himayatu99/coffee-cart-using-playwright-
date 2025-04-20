@@ -8,6 +8,7 @@
     "allure-playwright": "^3.2.1"
   },
   "scripts": {
+    "test": "npx playwright test",
     "main": "npx playwright test 01__E2E/main.spec.js",
     "completeScenario": "npx playwright test tests/completeScenario.spec.js"
   }
