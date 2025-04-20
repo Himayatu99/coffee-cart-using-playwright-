@@ -26,7 +26,7 @@ module.exports = defineConfig({
   ],
   use: {
     trace: 'on-first-retry',
-    headless: false,
+    headless: true,
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     browserName: 'chromium',
