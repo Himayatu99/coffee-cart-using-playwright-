@@ -29,9 +29,9 @@ jobs:
       - name: Run Playwright tests
         run: npm test
 
-      - name: Upload test results (optional)
-        if: always()
-        uses: actions/upload-artifact@v3.1.3
-        with:
-          name: playwright-report
-          path: playwright-report/
+    #   - name: Upload test results (optional)
+    #     if: always()
+    #     uses: actions/upload-artifact@v3.1.3
+    #     with:
+    #       name: playwright-report
+    #       path: playwright-report/
