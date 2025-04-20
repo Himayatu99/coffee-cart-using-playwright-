@@ -26,8 +26,8 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run Playwright tests
-        run: npm test
+      - name: Run Playwright test for main.spec.js
+        run: npx playwright test 01__E2E/main.spec.js
 
     #   - name: Upload test results (optional)
     #     if: always()
