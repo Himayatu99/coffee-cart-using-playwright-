@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { selectors } from "../selectors/selectors.js";
+import { selectors } from "../selector/selector.js";
 
 const alertPaymentDetails =
   test("TC-07 -  Payment Details Popup should be visible", async ({ page }) => {
@@ -10,6 +10,6 @@ const alertPaymentDetails =
     // Payment Details Popup should be visible
     await expect(page.getByText("Payment details×We will send")).toBeVisible();
     await expect(page.locator("h1")).toHaveText("Payment details");
-  });
+  })
 
 module.exports = alertPaymentDetails;

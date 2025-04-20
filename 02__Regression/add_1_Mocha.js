@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { selectors } from "../selectors/selectors.js";
+import { selectors } from "../selector/selector.js";
 
 const add_1_Mocha =
   test("TC-02 - Add 1 Mocha to the cart by clicking on it", async ({ page }) => {
@@ -9,6 +9,6 @@ const add_1_Mocha =
     await expect(page.locator(selectors.Total)).toHaveText("Total: $8.00");
     await page.hover(selectors.Total);
     await expect(page.getByText("Mocha x 1+-")).toBeVisible();
-  });
+  })
 
 module.exports = add_1_Mocha;

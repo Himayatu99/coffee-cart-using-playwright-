@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { selectors } from "../selectors/selectors.js";
+import { selectors } from "../selector/selector.js";
 
 const luckyDayPopup =
   test("TC-06 - 'It's your lucky day! Get an extra cup' (Mocha) should be visible", async ({
@@ -28,6 +28,6 @@ const luckyDayPopup =
     await expect(page.getByText("Espresso x 3+-")).toBeVisible();
     await expect(page.getByText("Mocha x 2+-")).toBeVisible();
     await expect(page.locator(selectors.Total)).toHaveText("Total: $57.00");
-  });
+  })
 
 module.exports = luckyDayPopup;

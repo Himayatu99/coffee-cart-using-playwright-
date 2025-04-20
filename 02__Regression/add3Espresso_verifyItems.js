@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { selectors } from "../selectors/selectors.js";
+import { selectors } from "../selector/selector.js";
 
 const add3Espresso =
   test("TC-05 - Add 3 Espresso and verify items in the cart", async ({
@@ -22,6 +22,6 @@ const add3Espresso =
     await expect(page.getByLabel("Cart page")).toHaveText("cart (6)");
     await page.hover(selectors.Total);
     await expect(page.locator(selectors.Total)).toHaveText("Total: $53.00");
-  });
+  })
 
 module.exports = add3Espresso;

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { selectors, expectedProducts } from "../selectors/selectors.js";
+import { selectors, expectedProducts } from "../selector/selector.js";
 
 test.describe("Coffee Cart App", () => {
   test.beforeEach(async ({ page }) => {
@@ -78,4 +78,4 @@ test.describe("Coffee Cart App", () => {
     await expect(page.getByText("Payment details×We will send")).toBeVisible();
     await expect(page.locator("h1")).toHaveText("Payment details");
   });
-});
+})

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { expectedProducts } from "../selectors/selectors.js";
+import { expectedProducts } from "../selector/selector.js";
 
 const verifyAllProducts =
   test("TC-01 - Verify all products in Coffee-Cart app", async ({ page }) => {
@@ -9,6 +9,6 @@ const verifyAllProducts =
 
     // Verify cart has zero items added
     await expect(page.getByLabel("Cart page")).toHaveText("cart (0)");
-  });
+  })
 
 module.exports = verifyAllProducts;
