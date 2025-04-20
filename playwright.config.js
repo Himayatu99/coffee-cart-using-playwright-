@@ -27,6 +27,8 @@ module.exports = defineConfig({
   use: {
     trace: 'on-first-retry',
     headless: false,
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
     browserName: 'chromium',
     viewport: { width: 1536, height: 864 },
     baseURL: 'https://coffee-cart.app/',
