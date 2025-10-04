@@ -9,6 +9,7 @@ on:
 jobs:
   e2e-tests:
     runs-on: ubuntu-latest
+    environment: ci-cd  # Replace 'ci-cd' with your actual environment name
 
     steps:
     - uses: actions/checkout@v4
