@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ✅ 1. Checkout full Git history (needed for git log)
+      # ✅ 1. Checkout code with full git history
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -54,10 +54,66 @@ jobs:
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
 
-      # ✅ 8. Extract Jira Issue Key (from commit or branch)
+      # ✅ 8. Extract Jira Issue Key (commit or branch)
       - name: Extract Jira Issue
         id: jira
         run: |
-          ISSUE=$(git log -1 --pretty=%B | grep -oE '[A-Z]+-[0-9]+' | head -1 || \
-                  echo "$GITHUB_REF_NAME" | grep -oE '[A-Z]+-[0-9]+' | head -1 || true)
-          echo "issue=$I
+          ISSUE=$(git log -1 --pretty=%B | grep -oE '[A-Z]+-[0-9]+' | head -1)
+          if [ -z "$ISSUE" ]; then
+            ISSUE=$(echo "$GITHUB_REF_NAME" | grep -oE '[A-Z]+-[0-9]+' | head -1)
+          fi
+          echo "Detected Jira issue: $ISSUE"
+          echo "issue=$ISSUE" >> $GITHUB_OUTPUT
+
+      # ✅ 9. Move issue to “In Progress” when code is pushed
+      - name: Move Jira issue to "In Progress"
+        if: steps.jira.outputs.issue != ''
+        uses: atlassian/gajira-transition@v3
+        with:
+          issue: ${{ steps.jira.outputs.issue }}
+          transition: "In Progress"
+
+      # ✅ 10. Move issue to “In Review” if tests pass
+      - name: Move Jira issue to "In Review"
+        if: success() && steps.jira.outputs.issue != ''
+        uses: atlassian/gajira-transition@v3
+        with:
+          issue: ${{ steps.jira.outputs.issue }}
+          transition: "In Review"
+
+  # ✅ 11. Mark Jira issue “Done” after successful merge
+  done:
+    name: Mark Jira Issue Done
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && success()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Jira Login
+        uses: atlassian/gajira-login@v3
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+
+      - name: Extract Jira Issue
+        id: jira
+        run: |
+          ISSUE=$(git log -1 --pretty=%B | grep -oE '[A-Z]+-[0-9]+' | head -1)
+          if [ -z "$ISSUE" ]; then
+            ISSUE=$(echo "$GITHUB_REF_NAME" | grep -oE '[A-Z]+-[0-9]+' | head -1)
+          fi
+          echo "Detected Jira issue: $ISSUE"
+          echo "issue=$ISSUE" >> $GITHUB_OUTPUT
+
+      - name: Move Jira issue to "Done"
+        if: steps.jira.outputs.issue != ''
+        uses: atlassian/gajira-transition@v3
+        with:
+          issue: ${{ steps.jira.outputs.issue }}
+          transition: "Done"
