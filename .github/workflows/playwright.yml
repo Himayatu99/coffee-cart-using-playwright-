@@ -1,4 +1,4 @@
-name: Playwright E2E with Jira
+name: Playwright E2E Tests
 
 on:
   push:
@@ -25,12 +25,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # Step 4: Run Playwright tests
+      # Step 4: Install Playwright browsers
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      # Step 5: Run Playwright tests
       - name: Run Playwright tests
         run: npx playwright test 01__E2E/main.spec.js --project=chromium --reporter=list
-        continue-on-error: true   # <-- prevents pipeline from stopping if tests fail
 
-      # Step 5: Upload Playwright report (always run, even if failed)
+      # Step 6: Upload Playwright report (always run)
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -38,7 +41,8 @@ jobs:
           name: playwright-report
           path: playwright-report
 
-      - name: Upload test artifacts (traces, screenshots)
+      # Step 7: Upload test artifacts (screenshots, traces)
+      - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -47,22 +51,3 @@ jobs:
             test-results/
             **/*.png
             **/*.zip
-
-      # Step 6: Login to Jira
-      - name: Jira Login
-        uses: atlassian/gajira-login@v3
-        env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-
-      # Step 7: Comment on Jira issue SCRUM-1
-      - name: Comment on Jira issue SCRUM-1
-        if: always()
-        uses: atlassian/gajira-comment@v3
-        with:
-          issue: SCRUM-1
-          comment: |
-            ✅ Playwright E2E pipeline finished on GitHub Actions.
-            - Status: ${{ job.status }}
-            - Report: attached as artifact
