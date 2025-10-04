@@ -20,9 +20,9 @@ module.exports = defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [
-    ['html', { outputFolder: 'custom-html-report' }],
-    ['allure-playwright', { outputFolder: 'custom-allure-results' }],
+ reporter: [
+    ['html', { outputFolder: 'playwright-report' }],
+    ['json', { outputFile: 'test-results.json' }],
   ],
   use: {
     trace: 'on-first-retry',
@@ -37,15 +37,15 @@ module.exports = defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    {
+   {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { browserName: 'chromium' },
     },
 
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
+    // {
+    //   name: 'firefox',
+    //   use: { ...devices['Desktop Firefox'] },
+    // },
 
     // {
     //   name: 'webkit',
