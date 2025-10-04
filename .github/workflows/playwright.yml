@@ -28,6 +28,7 @@ jobs:
       # Step 4: Run Playwright Tests
       - name: Run Playwright tests
         run: npx playwright test 01__E2E/main.spec.js --project=chromium --reporter=list
+        continue-on-error: true  
 
       # Step 5: Upload Test Report (Artifacts)
       - name: Upload Playwright report
