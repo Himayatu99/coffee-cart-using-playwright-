@@ -35,7 +35,7 @@ jobs:
         if: always()
         uses: chrnorm/deployment-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # Replace with ${{ secrets.GH_PAT }} if needed
+          token: ${{ secrets.GH_PAT }} 
           environment: testing
           initial-status: pending
           auto-merge: false
