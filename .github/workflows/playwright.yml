@@ -51,10 +51,10 @@ jobs:
             **/*.zip
 
       # Step 7: Update Jira (add comment on issue)
-      - name: Comment on Jira issue
+      - name: Comment on Jira issue SCRUM-1
         uses: atlassian/gajira-comment@v3
         with:
-          issue: PROJ-123
+          issue: SCRUM-1
           comment: "✅ Playwright E2E tests passed on GitHub Actions"
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
