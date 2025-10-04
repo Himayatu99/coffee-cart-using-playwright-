@@ -29,7 +29,15 @@ jobs:
       - name: Run Playwright test for main.spec.js
         id: playwright
         run: npx playwright test 01__E2E/main.spec.js
-        continue-on-error: true  # Allow pipeline to proceed even if tests fail
+        continue-on-error: true
+
+      - name: Notify Jira of Test Run
+        if: always()
+        uses: chrnorm/deployment-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: testing
+          deployment_id: ${{ github.run_id }}
 
       - name: Login to Jira
         uses: atlassian/gajira-login@v3
@@ -42,28 +50,46 @@ jobs:
         id: find-issue
         uses: atlassian/gajira-find-issue-key@v3
         with:
-          from: commits  # Scans commit messages for TEST-123
+          from: commits
+
+      - name: Install jq
+        if: steps.playwright.outcome == 'failure'
+        run: sudo apt-get install -y jq
 
       - name: Transition Jira Issue on Success
         if: steps.playwright.outcome == 'success' && steps.find-issue.outputs.issue != ''
         uses: atlassian/gajira-transition@v3
         with:
           issue: ${{ steps.find-issue.outputs.issue }}
-          transition: "Done"  # Adjust to your Jira workflow (e.g., "In Progress", "Done")
+          transition: "Done"  # Adjust to your Jira workflow
 
       - name: Comment on Jira Issue on Failure
         if: steps.playwright.outcome == 'failure' && steps.find-issue.outputs.issue != ''
-        uses: atlassian/gajira-comment@v3
-        with:
-          issue: ${{ steps.find-issue.outputs.issue }}
-          comment: |
-            Playwright test failed in run #${{ github.run_number }}.
-            Check details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          FAILURE_DETAILS=$(jq -r '.suites[].specs[].tests[] | select(.status == "failed") | .title + ": " + (.error.message // "No error message")' test-results.json || echo "No detailed failure info available")
+          curl -u ${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
+            -X POST \
+            -H "Content-Type: application/json" \
+            ${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find-issue.outputs.issue }}/comment \
+            -d "{\"body\": \"Playwright test failed in run #${{ github.run_number }}.\nDetails:\n${FAILURE_DETAILS}\nCheck run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
 
       - name: Upload Test Results to GitHub Artifacts
         if: always()
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4  # Updated to v4
         with:
           name: playwright-report
           path: playwright-report/
-          retention-days: 7  # Optional: Keep artifacts for 7 days
+          retention-days: 7
+
+      - name: Attach Screenshots to Jira
+        if: steps.playwright.outcome == 'failure' && steps.find-issue.outputs.issue != ''
+        run: |
+          for file in playwright-report/*.png; do
+            if [ -f "$file" ]; then
+              curl -u ${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
+                -X POST \
+                -H "X-Atlassian-Token: no-check" \
+                --form "file=@$file" \
+                ${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find-issue.outputs.issue }}/attachments
+            fi
+          done
