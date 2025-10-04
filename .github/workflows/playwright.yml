@@ -45,10 +45,17 @@ jobs:
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
 
-      # ✅ Transition Jira Issue (only if tests passed)
+      # 🔍 Extract Jira Issue key from last commit
+      - name: Extract Jira Issue
+        id: jira
+        run: |
+          ISSUE=$(git log -1 --pretty=%B | grep -oE '[A-Z]+-[0-9]+' | head -1 || true)
+          echo "issue=$ISSUE" >> $GITHUB_OUTPUT
+
+      # ✅ Transition Jira Issue dynamically
       - name: Transition Jira issue to "In Review"
-        if: success()
+        if: success() && steps.jira.outputs.issue != ''
         uses: atlassian/gajira-transition@v3
         with:
-          issue: SCRUM-1
+          issue: ${{ steps.jira.outputs.issue }}
           transition: "In Review"
