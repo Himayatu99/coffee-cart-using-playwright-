@@ -56,13 +56,13 @@ jobs:
     - name: Update Jira on Success
       if: success() && github.event_name == 'push'
       run: |
-        gh issue comment https://testslzdemom.atlassian.net/browse/SCRUM-1 --body "E2E tests passed! Transitioning to Done. #time 2h #resolve SCRUM-1"
+        gh issue comment https://testslozdemom.atlassian.net/browse/SCRUM-1 --body "E2E tests passed! Transitioning to Done. #time 2h #resolve SCRUM-1"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Update Jira on Failure
       if: failure() && github.event_name == 'push'
       run: |
-        gh issue comment https://testslzdemom.atlassian.net/browse/SCRUM-1 --body "E2E tests failed! Check logs. #time 1h #comment See artifact for details."
+        gh issue comment https://testslozdemom.atlassian.net/browse/SCRUM-1 --body "E2E tests failed! Check logs. #time 1h #comment See artifact for details."
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
