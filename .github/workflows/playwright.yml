@@ -1,3 +1,13 @@
+name: Playwright CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -27,15 +37,15 @@ jobs:
           name: playwright-report
           path: playwright-report
 
-      # 🔑 First login to Jira
+      # 🔑 Jira Login (creates config.yml)
       - name: Jira Login
         uses: atlassian/gajira-login@v3
         with:
-          site: ${{ secrets.JIRA_BASE_URL }}       # e.g. testslozdemom.atlassian.net
+          site: ${{ secrets.JIRA_BASE_URL }}
           email: ${{ secrets.JIRA_USER_EMAIL }}
           api-token: ${{ secrets.JIRA_API_TOKEN }}
 
-      # ✅ Then transition issue
+      # ✅ Transition Jira Issue
       - name: Transition Jira issue to "In Review"
         if: success()
         uses: atlassian/gajira-transition@v3
