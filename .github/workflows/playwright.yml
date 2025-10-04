@@ -1,99 +1,61 @@
-name: Playwright Tests
+name: Playwright E2E Tests & Jira Update
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
-  test:
-    name: Run Playwright Tests
-    runs-on: ubuntu-latest
+  e2e-tests:
+    runs-on: ubuntu-latest  # Use ubuntu for speed; switch to windows-latest if needed
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'  # Match your local Node version
+        cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+    - name: Install dependencies
+      run: npm ci  # Faster than npm install; assumes package-lock.json
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium  # Install only Chromium
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps chromium  # Only Chromium, as per your setup
 
-      - name: Run Playwright test for main.spec.js
-        id: playwright
-        run: npx playwright test 01__E2E/main.spec.js --project=chromium
-        continue-on-error: true
+    - name: Run Playwright tests
+      run: npm run test:e2e -- --project=chromium  # Adjust if your script is different
+      env:
+        CI: true  # Enables CI mode for Playwright
 
-      - name: Notify Jira of Test Run
-        if: always()
-        uses: chrnorm/deployment-action@v2
-        with:
-          token: ${{ secrets.GH_PAT }}  # Ensure this is present
-          environment: testing
-          initial-status: pending
-          auto-merge: false
-          task: deploy
-          transient-environment: false
-          auto-inactive: true
+    - name: Upload test results
+      if: always()  # Upload even on failure
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
 
-      - name: Login to Jira
-        uses: atlassian/gajira-login@v3
-        env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+    - name: Jira Login & Update Issue
+      if: always()  # Run regardless of tests
+      uses: atlassian/gajira-login@v3
+      with:
+        url: ${{ secrets.JIRA_BASE_URL }}
+        username: ${{ secrets.JIRA_USER_EMAIL }}
+        token: ${{ secrets.JIRA_API_TOKEN }}
 
-      - name: Find Jira Issue Key
-        id: find-issue
-        uses: atlassian/gajira-find-issue-key@v3
-        with:
-          from: commits
+    - name: Update Jira on Success
+      if: success() && github.event_name == 'push'  # Only on push success (not PR)
+      run: |
+        gh issue comment SCRUM-1 --body "E2E tests passed! Transitioning to Done. #time 2h #resolve SCRUM-1"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Built-in token for gh CLI
 
-      - name: Install jq
-        if: steps.playwright.outcome == 'failure'
-        run: sudo apt-get install -y jq
-
-      - name: Transition Jira Issue on Success
-        if: steps.playwright.outcome == 'success' && steps.find-issue.outputs.issue != ''
-        uses: atlassian/gajira-transition@v3
-        with:
-          issue: ${{ steps.find-issue.outputs.issue }}
-          transition: "Done"  # Adjust to your Jira workflow
-
-      - name: Comment on Jira Issue on Failure
-        if: steps.playwright.outcome == 'failure' && steps.find-issue.outputs.issue != ''
-        run: |
-          FAILURE_DETAILS=$(jq -r '.suites[].specs[].tests[] | select(.status == "failed") | .title + ": " + (.error.message // "No error message")' test-results.json || echo "No detailed failure info available")
-          curl -u ${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
-            -X POST \
-            -H "Content-Type: application/json" \
-            ${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find-issue.outputs.issue }}/comment \
-            -d "{\"body\": \"Playwright test failed in run #${{ github.run_number }}.\nDetails:\n${FAILURE_DETAILS}\nCheck run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
-
-      - name: Upload Test Results to GitHub Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
-
-      - name: Attach Screenshots to Jira
-        if: steps.playwright.outcome == 'failure' && steps.find-issue.outputs.issue != ''
-        run: |
-          for file in playwright-report/*.png; do
-            if [ -f "$file" ]; then
-              curl -u ${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
-                -X POST \
-                -H "X-Atlassian-Token: no-check" \
-                --form "file=@$file" \
-                ${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find-issue.outputs.issue }}/attachments
-            fi
-          done
+    - name: Update Jira on Failure
+      if: failure() && github.event_name == 'push'
+      run: |
+        gh issue comment SCRUM-1 --body "E2E tests failed! Check logs. #time 1h #comment See artifact for details."
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
