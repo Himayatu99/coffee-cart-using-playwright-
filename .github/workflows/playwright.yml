@@ -37,15 +37,15 @@ jobs:
           name: playwright-report
           path: playwright-report
 
-      # 🔑 Jira Login (creates config.yml)
+      # 🔑 Jira Login
       - name: Jira Login
         uses: atlassian/gajira-login@v3
-        with:
-          site: ${{ secrets.JIRA_BASE_URL }}
-          email: ${{ secrets.JIRA_USER_EMAIL }}
-          api-token: ${{ secrets.JIRA_API_TOKEN }}
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
 
-      # ✅ Transition Jira Issue
+      # ✅ Transition Jira Issue (only if tests passed)
       - name: Transition Jira issue to "In Review"
         if: success()
         uses: atlassian/gajira-transition@v3
