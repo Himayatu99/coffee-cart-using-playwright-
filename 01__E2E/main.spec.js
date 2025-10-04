@@ -1,6 +1,6 @@
 import { test } from "@playwright/test";
 
-test.describe("SCRUM-3 Coffee Cart - Add items to the cart and verify", () => {
+test.describe("SCRUM-3 Coffee Cart- Add items to the cart and verify", () => {
     test.beforeEach(async ({ page }) => {
       await page.goto("/");
     });
