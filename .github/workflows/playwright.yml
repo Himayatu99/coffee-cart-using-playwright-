@@ -1,4 +1,4 @@
-name: Playwright E2E Tests with Jira
+name: Playwright E2E with Jira
 
 on:
   push:
@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout Code
-      - name: Checkout repository
+      # Step 1: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       # Step 2: Setup Node.js
@@ -21,16 +21,16 @@ jobs:
         with:
           node-version: 20
 
-      # Step 3: Install Dependencies
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # Step 4: Run Playwright Tests
+      # Step 4: Run Playwright tests
       - name: Run Playwright tests
         run: npx playwright test 01__E2E/main.spec.js --project=chromium --reporter=list
-        continue-on-error: true  
+        continue-on-error: true   # <-- prevents pipeline from stopping if tests fail
 
-      # Step 5: Upload Test Report (Artifacts)
+      # Step 5: Upload Playwright report (always run, even if failed)
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -38,25 +38,31 @@ jobs:
           name: playwright-report
           path: playwright-report
 
-      # Step 6: Upload Traces & Screenshots
-      - name: Upload traces and screenshots
+      - name: Upload test artifacts (traces, screenshots)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-artifacts
           path: |
             test-results/
-            playwright-report/
             **/*.png
             **/*.zip
 
-      # Step 7: Update Jira (add comment on issue)
-      - name: Comment on Jira issue SCRUM-1
-        uses: atlassian/gajira-comment@v3
-        with:
-          issue: SCRUM-1
-          comment: "✅ Playwright E2E tests passed on GitHub Actions"
+      # Step 6: Login to Jira
+      - name: Jira Login
+        uses: atlassian/gajira-login@v3
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+
+      # Step 7: Comment on Jira issue SCRUM-1
+      - name: Comment on Jira issue SCRUM-1
+        if: always()
+        uses: atlassian/gajira-comment@v3
+        with:
+          issue: SCRUM-1
+          comment: |
+            ✅ Playwright E2E pipeline finished on GitHub Actions.
+            - Status: ${{ job.status }}
+            - Report: attached as artifact
