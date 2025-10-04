@@ -1,6 +1,6 @@
 import { test } from "@playwright/test";
 
-test.describe("Coffee Cart - Add items to the cart and verify", () => {
+test.describe("TEST-123 Coffee Cart - Add items to the cart and verify", () => {
     test.beforeEach(async ({ page }) => {
       await page.goto("/");
     });
