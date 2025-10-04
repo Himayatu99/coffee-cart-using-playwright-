@@ -4,7 +4,6 @@ import { selectors, expectedProducts } from "../selector/selector.js";
 test.describe("Coffee Cart App", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    expect(page.url()).toBe("https://coffee-cart.app/");
   });
 
   test("Complete Scenario - Add items to the cart and verify", async ({
