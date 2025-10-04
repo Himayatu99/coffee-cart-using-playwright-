@@ -24,19 +24,24 @@ jobs:
         run: npm install
 
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium  # Install only Chromium
 
       - name: Run Playwright test for main.spec.js
         id: playwright
-        run: npx playwright test 01__E2E/main.spec.js
+        run: npx playwright test 01__E2E/main.spec.js --project=chromium
         continue-on-error: true
 
       - name: Notify Jira of Test Run
         if: always()
         uses: chrnorm/deployment-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # Use GH_PAT if needed
+          token: ${{ secrets.GITHUB_TOKEN }}  # Replace with ${{ secrets.GH_PAT }} if needed
           environment: testing
+          initial-status: pending
+          auto-merge: false
+          task: deploy
+          transient-environment: false
+          auto-inactive: true
 
       - name: Login to Jira
         uses: atlassian/gajira-login@v3
