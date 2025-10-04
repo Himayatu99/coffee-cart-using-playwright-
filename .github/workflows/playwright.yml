@@ -26,7 +26,7 @@ jobs:
       run: npx playwright install --with-deps chromium  # Only Chromium, as per your setup
 
     - name: Run Playwright tests
-      run: npm run test:e2e -- --project=chromium  # Adjust if your script is different
+      run: npx playwright test 01__E2E/main.spec.js --project=chromium  # Adjust if your script is different
       env:
         CI: true  # Enables CI mode for Playwright
 
