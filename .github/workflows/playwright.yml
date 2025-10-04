@@ -8,7 +8,7 @@ on:
 
 jobs:
   e2e-tests:
-    runs-on: ubuntu-latest  # Use ubuntu for speed; switch to windows-latest if needed
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -16,46 +16,52 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'  # Match your local Node version
+        node-version: '20'
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci  # Faster than npm install; assumes package-lock.json
+      run: npm ci
 
     - name: Install Playwright browsers
-      run: npx playwright install --with-deps chromium  # Only Chromium, as per your setup
+      run: npx playwright install --with-deps chromium
 
     - name: Run Playwright tests
-      run: npx playwright test 01__E2E/main.spec.js --project=chromium  # Adjust if your script is different
+      run: npx playwright test 01__E2E/main.spec.js --project=chromium
       env:
-        CI: true  # Enables CI mode for Playwright
+        CI: true
 
     - name: Upload test results
-      if: always()  # Upload even on failure
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: playwright-report
         path: playwright-report/
         retention-days: 30
 
+    - name: Set up Jira environment variables
+      run: |
+        echo "JIRA_BASE_URL=${{ secrets.JIRA_BASE_URL }}" >> $GITHUB_ENV
+        echo "JIRA_USER_EMAIL=${{ secrets.JIRA_USER_EMAIL }}" >> $GITHUB_ENV
+        echo "JIRA_API_TOKEN=${{ secrets.JIRA_API_TOKEN }}" >> $GITHUB_ENV
+
     - name: Jira Login & Update Issue
-      if: always()  # Run regardless of tests
+      if: always()
       uses: atlassian/gajira-login@v3
-      with:
-        url: ${{ secrets.JIRA_BASE_URL }}
-        username: ${{ secrets.JIRA_USER_EMAIL }}
-        token: ${{ secrets.JIRA_API_TOKEN }}
+      env:
+        JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+        JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+        JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
 
     - name: Update Jira on Success
-      if: success() && github.event_name == 'push'  # Only on push success (not PR)
+      if: success() && github.event_name == 'push'
       run: |
-        gh issue comment SCRUM-1 --body "E2E tests passed! Transitioning to Done. #time 2h #resolve SCRUM-1"
+        gh issue comment https://testslzdemom.atlassian.net/browse/SCRUM-1 --body "E2E tests passed! Transitioning to Done. #time 2h #resolve SCRUM-1"
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Built-in token for gh CLI
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Update Jira on Failure
       if: failure() && github.event_name == 'push'
       run: |
-        gh issue comment SCRUM-1 --body "E2E tests failed! Check logs. #time 1h #comment See artifact for details."
+        gh issue comment https://testslzdemom.atlassian.net/browse/SCRUM-1 --body "E2E tests failed! Check logs. #time 1h #comment See artifact for details."
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
