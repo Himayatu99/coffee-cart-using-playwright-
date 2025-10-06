@@ -14,31 +14,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ✅ 1. Checkout code with full git history
+      # Checkout code with full git history
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ✅ 2. Setup Node.js
+      # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # ✅ 3. Install dependencies
+      # Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # ✅ 4. Install Playwright browsers
+      # Install Playwright browsers
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      # ✅ 5. Run Playwright tests
+      # Run Playwright tests
       - name: Run Playwright Tests
         run: npx playwright test 01__E2E/main.spec.js --project=chromium --reporter=list
 
-      # ✅ 6. Upload Playwright Report
+      # Upload Playwright Report
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -46,7 +46,7 @@ jobs:
           name: playwright-report
           path: playwright-report
 
-      # ✅ 7. Jira Login
+      # Jira Login
       - name: Jira Login
         uses: atlassian/gajira-login@v3
         env:
@@ -54,7 +54,7 @@ jobs:
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
 
-      # ✅ 8. Extract Jira Issue Key (commit or branch)
+      # Extract Jira Issue Key (commit or branch)
       - name: Extract Jira Issue
         id: jira
         run: |
@@ -65,7 +65,7 @@ jobs:
           echo "Detected Jira issue: $ISSUE"
           echo "issue=$ISSUE" >> $GITHUB_OUTPUT
 
-      # ✅ 9. Move issue to “In Progress” when code is pushed
+      # Move issue to “In Progress” when code is pushed
       - name: Move Jira issue to "In Progress"
         if: steps.jira.outputs.issue != ''
         uses: atlassian/gajira-transition@v3
@@ -73,7 +73,7 @@ jobs:
           issue: ${{ steps.jira.outputs.issue }}
           transition: "In Progress"
 
-      # ✅ 10. Move issue to “In Review” if tests pass
+      # Move issue to “In Review” if tests pass
       - name: Move Jira issue to "In Review"
         if: success() && steps.jira.outputs.issue != ''
         uses: atlassian/gajira-transition@v3
@@ -81,7 +81,7 @@ jobs:
           issue: ${{ steps.jira.outputs.issue }}
           transition: "In Review"
 
-  # ✅ 11. Mark Jira issue “Done” after successful merge
+  # Mark Jira issue “Done” after successful merge
   done:
     name: Mark Jira Issue Done
     runs-on: ubuntu-latest
