@@ -10,6 +10,7 @@
   "scripts": {
     "test": "npx playwright test 01__E2E/main.spec.js",
     "main": "npx playwright test 01__E2E/main.spec.js",
-    "completeScenario": "npx playwright test tests/completeScenario.spec.js"
+    "completeScenario": "npx playwright test tests/completeScenario.spec.js",
+    "test:report": "npx playwright test && node generate-health-report.js"
   }
 }
